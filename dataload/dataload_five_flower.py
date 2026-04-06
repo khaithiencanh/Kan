@@ -24,7 +24,7 @@ class Five_Flowers_Load(Dataset):
         self.images_path = []  # 存储训练集的所有图片路径
         self.images_label = []  # 存储训练集图片对应索引信息 
         self.images_num = []  # 存储每个类别的样本总数
-        supported = [".jpg", ".JPG", ".png", ".PNG"]  # 支持的文件后缀类型
+        supported = [".jpg", ".JPG", ".png", ".PNG", ".tiff"]  # 支持的文件后缀类型
         # 遍历每个文件夹下的文件
         for cla in flower_class:
             cla_path = os.path.join(data_path, cla)
@@ -46,15 +46,17 @@ class Five_Flowers_Load(Dataset):
     def __len__(self):
         return sum(self.images_num)
     
-    def __getitem__(self, idx):
-        img = Image.open(self.images_path[idx])
-        label = self.images_label[idx]
-        if img.mode != 'RGB':
-            raise ValueError("image: {} isn't RGB mode.".format(self.images_path[idx]))
+    def __getitem__(self, item):
+        # 1. Đọc ảnh và tự động ép về hệ màu RGB 3 kênh
+        img = Image.open(self.images_path[item]).convert('RGB')
+        
+        # 2. Lấy nhãn (label) tương ứng của bức ảnh đó
+        label = self.images_label[item]  # <--- SỬA Ở ĐÂY
+
+        # 3. Đưa qua bộ khuôn transform
         if self.transform is not None:
             img = self.transform(img)
-        else:
-            raise ValueError('Image is not preprocessed')
+
         return img, label
     
     # 非必须实现，torch里有默认实现；该函数的作用是: 决定一个batch的数据以什么形式来返回数据和标签
