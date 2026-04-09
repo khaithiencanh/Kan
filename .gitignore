@@ -1,0 +1,10 @@
+# Bỏ qua thư mục dữ liệu
+data/
+
+# Bỏ qua các file trọng số mô hình nặng
+*.pth
+results/weights/
+
+# Bỏ qua rác của Python
+__pycache__/
+*.pyc
