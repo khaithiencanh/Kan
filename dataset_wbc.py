@@ -11,21 +11,21 @@ from skimage.color import rgb2hsv, hsv2rgb
 
 # 1. ĐÃ ĐỔI TÊN CHUẨN KHỚP 100% VỚI 15 THƯ MỤC CỦA BẠN
 labels_map = {
-    'BAS': 0, 
-    'EBO': 1, 
-    'EOS': 2, 
-    'KSC': 3, 
-    'LYA': 4,
-    'LYT': 5, 
-    'MMZ': 6, 
-    'MOB': 7, 
-    'MON': 8, 
-    'MYB': 9,
-    'MYO': 10, 
-    'NGB': 11, 
-    'NGS': 12, 
-    'PMB': 13, 
-    'PMO': 14
+    'Basophil': 0,
+    'Erythroblast': 1,
+    'Eosinophil': 2,
+    'Smudge cell': 3,
+    'Atypical Lymphocyte': 4,
+    'Typical Lymphocyte': 5,
+    'Metamyelocyte': 6,
+    'Monoblast': 7, 
+    'Monocyte': 8,
+    'Myelocyte': 9,
+    'Myeloblast': 10,
+    'Band Neutrophil': 11, 
+    'Segmented Neutrophil': 12,
+    'Promyelocyte Bilobed': 13,
+    'Promyelocyte': 14
 }
 
 class DatasetMarr(Dataset): 
@@ -43,10 +43,12 @@ class DatasetMarr(Dataset):
 
         set_fold = "kfold" + str(fold)  
         
+        # Cho phép nạp cả ảnh thật (AML_LMU) và ảnh giả (synthetic)
         if isinstance(dataset_selection, list):
-            dataset_index = metadata.dataset.isin(dataset_selection)
+            allowed_datasets = dataset_selection + ['synthetic']
+            dataset_index = metadata.dataset.isin(allowed_datasets)
         else:
-            dataset_index = metadata["dataset"] == dataset_selection
+            dataset_index = metadata["dataset"].isin([dataset_selection, 'synthetic'])
 
         # Lọc Train/Val/Test
         if state == 'train':

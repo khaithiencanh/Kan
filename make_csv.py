@@ -56,7 +56,7 @@ def create_kfold_csv(data_dir, output_csv, num_splits=5):
 
 if __name__ == "__main__":
     # Thay đường dẫn thư mục gốc chứa 15 thư mục tế bào của bạn vào đây
-    DATA_DIRECTORY = "./data/AML_LMU" 
+    DATA_DIRECTORY = "../data/AML_LMU" 
     OUTPUT_FILE = "AML_metadata.csv"
     
     create_kfold_csv(DATA_DIRECTORY, OUTPUT_FILE)
