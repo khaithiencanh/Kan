@@ -13,7 +13,7 @@ import torch.optim.lr_scheduler as lr_scheduler
 import classic_models
 from utils.lr_methods import warmup
 from utils.train_engin import train_one_epoch, evaluate
-
+import datetime
 # ==========================================
 # NHÚNG DATASET MỚI CỦA BẠN VÀO ĐÂY
 from dataset_wbc import DatasetMarr, labels_map
@@ -52,12 +52,11 @@ def main(args):
     train_dataset = DatasetMarr(dataroot=args.data_path, dataset_selection=dataset_name, labels_map=labels_map, fold=args.fold, transform=data_transform["train"], state='train')
     val_dataset = DatasetMarr(dataroot=args.data_path, dataset_selection=dataset_name, labels_map=labels_map, fold=args.fold, transform=data_transform["val"], state='validation')
 
-    nw = 8
+    nw = 4
     print(f'Using {nw} dataloader workers every process')
 
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True, pin_memory=True, num_workers=nw)
     val_loader = torch.utils.data.DataLoader(val_dataset, batch_size=args.batch_size, shuffle=False, pin_memory=True, num_workers=nw)
-    # =========================================================================
 
     # Định nghĩa Model của tác giả
     model = getattr(classic_models, args.model)(num_classes=args.num_classes)
@@ -69,31 +68,30 @@ def main(args):
     # Scheduler của tác giả
     lf = lambda x: ((1 + math.cos(x * math.pi / args.epochs)) / 2) * (1 - args.lrf) + args.lrf  # cosine
     scheduler = lr_scheduler.LambdaLR(optimizer, lr_lambda=lf)
+    current_time = datetime.datetime.now().strftime("%Y%m%d_%H%M")
 
-    # =========================================================================
-    # VỊ TRÍ 2: KHAI BÁO BIẾN LƯU BEST MODEL
-    # =========================================================================
     best_val_acc = 0.0
     mix_val = os.path.basename(os.path.normpath(args.data_path))
-    best_weight_path = os.path.join(save_path, f"kansformer_AML_mix{mix_val}_fold{args.fold}_best.pth")
-    
+    best_weight_path = os.path.join(save_path, f"kansformer_AML_mix{mix_val}_fold{args.fold}_{current_time}_best.pth")
     for epoch in range(args.epochs):
-        # Hàm Train lõi của tác giả (Giữ nguyên 100%)
         mean_loss, train_acc = train_one_epoch(model=model, optimizer=optimizer, data_loader=train_loader,
                                             device=device, epoch=epoch, use_amp=args.use_amp, lr_method=warmup)
         scheduler.step()
         
-        # Hàm Validate lõi của tác giả (Giữ nguyên 100%)
         val_acc = evaluate(model=model, data_loader=val_loader, device=device)
 
         print('[epoch %d] train_loss: %.3f  train_acc: %.3f  val_accuracy: %.3f' % (
-        epoch + 1, mean_loss, train_acc, val_acc))
-        
+            epoch + 1, mean_loss, train_acc, val_acc))
+        print(f"  VRAM allocated: {torch.cuda.memory_allocated()/1e9:.2f} GB | reserved: {torch.cuda.memory_reserved()/1e9:.2f} GB")
+
+        # Dọn VRAM cache sau mỗi epoch
+        torch.cuda.empty_cache()
+
         # Cập nhật log file
         log_file = os.path.join(save_path, f"kansformer_AML_fold{args.fold}_log.txt")
         with open(log_file, 'a') as f:
             f.writelines('[epoch %d] train_loss: %.3f  train_acc: %.3f  val_accuracy: %.3f' % (
-            epoch + 1, mean_loss, train_acc, val_acc) + '\n')
+                epoch + 1, mean_loss, train_acc, val_acc) + '\n')
 
         if args.tensorboard:
             tags = ["train_loss", "train_acc", "val_accuracy", "learning_rate"]
@@ -102,9 +100,6 @@ def main(args):
             tb_writer.add_scalar(tags[2], val_acc, epoch)
             tb_writer.add_scalar(tags[3], optimizer.param_groups[0]["lr"], epoch)
 
-        # =========================================================================
-        # VỊ TRÍ 3: LƯU LẠI BEST MODEL NẾU ĐIỂM CAO HƠN
-        # =========================================================================
         if val_acc > best_val_acc:
             best_val_acc = val_acc
             torch.save(model.state_dict(), best_weight_path)
