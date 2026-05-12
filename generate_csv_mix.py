@@ -76,6 +76,6 @@ if __name__ == "__main__":
     OUTPUT_DIR = "csv_files/mix"
     
     # 4. Các mốc muốn tạo
-    MILESTONES = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000]
+    MILESTONES = [100, 200, 300, 400, 500, 600, 700, 800, 900, 1000, 3000]
     
     create_reproduce_mix(BASE_CSV, SYNTHETIC_DIRECTORY, MILESTONES, OUTPUT_DIR)
