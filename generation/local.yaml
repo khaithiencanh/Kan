@@ -1,0 +1,6 @@
+
+save_dir: '../../data/results/synthetic2'
+datadream_dir: '../training/output'
+model_dir:
+    sd2.1: 'C:\Users\Administrator\.cache\modelscope\hub\models\AI-ModelScope\stable-diffusion-v2-1'
+

@@ -1,0 +1,5 @@
+fewshot_data_dir:
+    matek: 'C:\Users\Administrator\data\AML_LMU'
+
+model_dir:
+    sd2.1: 'C:\Users\Administrator\.cache\modelscope\hub\models\AI-ModelScope\stable-diffusion-v2-1'
